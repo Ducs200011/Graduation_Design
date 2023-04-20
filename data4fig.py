@@ -1,8 +1,11 @@
+'''
+绘图专用函数，用来调整图像样式使其直观且美观
+'''
 import numpy as np
 def datafix(AR,): #浮动范围，最小值20-30，最大值90-100
     [m, n] = AR.shape
-    liemin = np.min(AR, axis=0)
-    liemax = np.max(AR, axis=0)
+    liemin = np.min(AR, axis=0)     #取每列最大值
+    liemax = np.max(AR, axis=0)     #取每列最大值
     liegap = liemax - liemin
     lieminmax = np.max(liemin)
     lieminmin = np.min(liemin)
