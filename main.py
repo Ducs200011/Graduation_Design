@@ -4,15 +4,20 @@ from data4fig import datafix
 from isahpok import isahpok
 import json
 import warnings
+from getphi import getphi
 
-clrlist = 'rygcbm' #最多输入6组数据，定义颜色
-#读入测试数据
-with open('testdata.json','r') as f:
-    data = json.load(f)
+#读入测试数据,f1为熵权法所用矩阵，f2为层次分析法所用矩阵
+with open('data_AHP.json', 'r') as f2, open('data_EWM_Elia.json') as f1:
+    data_AHP = json.load(f2)
+    data_EWM = json.load(f1)
+    ahp_data = data_AHP['AHPjudge']
+    testx = data_EWM['data_EWM']
+    casename = data_EWM['casename']
+    f1.close()
+    f2.close()
 #testp = data['xorb'] #将p从json读入，p表示归一化矩阵
 
 #AHP法
-ahp_data = data['AHPjudge']
 ahp_data = np.array(ahp_data)
 ahp_flg, W = isahpok(ahp_data)
 if ahp_flg == 0:
@@ -23,13 +28,12 @@ if ahp_flg == 0:
 #W = np.array([0.4541, 0.2546, 0.8458, 0.0662, 0.0962])
 
 #熵权法
-testx = data['shudianxianlu']
 testx = np.array(testx)
 [m, n] = testx.shape
 p = np.zeros(m * n).reshape(m, n)
 for i in range(m):
     for j in range(n):
-        p[i, j] = (testx[i, j]) / (sum((testx[ii, j] for ii in range(m))))
+        p[i, j] = (1 + testx[i, j]) / sum((1 + testx[ii, j] for ii in range(m)))
 E = np.zeros(n)
 Wd = np.zeros(n)
 for j in range(n):  #各指标熵值计算
@@ -41,7 +45,8 @@ for j in range(n):  #熵权值计算
     Wd[j] = (1 - E[j]) / sum(1 - E)
 
 #组合权重
-Phi = W * 0.7 + Wd * 0.3
+#Phi = W * 0.7 + Wd * 0.3        #最小二乘法
+Phi = getphi(p, W, Wd)
 
 #正负靶心
 Z = p * Phi #求解加权规范化决策矩阵
@@ -60,12 +65,13 @@ print("低碳潜力评估(值越小相应低碳潜力越好,值越大方案越�
 print(C)
 
 #绘图
+clrlist = 'rygcbm' #最多同时输入6组数据，定义颜色
 newZ = datafix(Z)  #数据处理，使图像更美观
 data_dim = n #数据维数
 data_num = m #场景数量
 angles = np.linspace(0, 2 * np.pi, data_dim, endpoint=False)  #设立极坐标角度
 angles = np.concatenate((angles, [angles[0]]))
-labels = ['充裕性', '灵活性', '弹性', '清洁性', '经济性']   #长度应该为data_dim,设置坐标名称'经济性'
+labels = ['充裕性', '灵活性', '清洁能源调用率', '清洁性', '经济性']   #长度应该为data_dim,设置坐标名称'经济性'
 labels = np.concatenate((labels, [labels[0]]))
 score = newZ   #设立分数
 score = np.hstack((score, score.T[0].reshape(data_num, 1)))
@@ -84,7 +90,11 @@ ax.spines['polar'].set_visible(False)   #隐藏最外围的圆
 ax.grid(False)  #隐藏圆形网格线
 #ax.set_rlabel_position(0) #坐标显示
 ax.set_rticks([])   #关闭坐标显示
-dimname_full = ['S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7', 'S8', 'S9', 'S10']    #示例最多显示10个
+dimname_full = [None] * 10
+for i in range(data_num):
+    dimname_full[i] = 'S' + str(i + 1) + ':' + casename[i]
 dimname = [dimname_full[i] for i in range(m)]
 plt.legend(dimname, loc='best')
+plt.savefig('result/result.png', dpi=1000)  #导出图片，尽量高像素
+print('result has been saved!')
 plt.show()

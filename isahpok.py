@@ -9,7 +9,7 @@ def isahpok(inputahp,):
     index = np.argmax(tzz)  #标记最大特征值位置
     tzz_max = np.real(tzz[index])
     tzary_max = np.real(tzary[:, index])    #AHP的w
-    CI = (tzz_max - n) / (n -1)
+    CI = (tzz_max - n) / (n - 1)
     RI = RIlist[n - 1]
     CR = CI / RI
     if CR < 0.1:
