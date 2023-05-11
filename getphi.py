@@ -18,7 +18,7 @@ def getphi(p, W, Wd):
         F = 0
         for i in model.M:
             for j in model.N:
-                F = F + np.power((W[j] - model.phi[j]), 2) + np.power((Wd[j] - model.phi[j]), 2)
+                F = F + np.power((W[j] - model.phi[j]) * p[i, j], 2) + np.power((Wd[j] - model.phi[j]) * p[i, j], 2)
         return F
 
     def phi_cons(model):
@@ -30,7 +30,7 @@ def getphi(p, W, Wd):
     #constrains
     model.phi_cons = pyo.Constraint(rule=phi_cons)
 
-    opt= pyo.SolverFactory('gurobi')    #利用gurobi求解约束
+    opt = pyo.SolverFactory('gurobi')    #利用gurobi求解约束
     solution = opt.solve(model)
 
     phi = np.array([pyo.value(model.phi[j]) for j in model.N])
