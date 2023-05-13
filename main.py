@@ -6,6 +6,7 @@ import json
 import warnings
 from getphi import getphi
 import os
+import xlwt
 
 img_dpi = 1000      #图像dpi
 #指标量化
@@ -39,7 +40,7 @@ testx = np.array(testx)
 p = np.zeros(m * n).reshape(m, n)
 for i in range(m):
     for j in range(n):
-        p[i, j] = (testx[i, j]) / np.sqrt(sum((np.power(testx[ii, j], 2) for ii in range(m))))
+        p[i, j] = (testx[i, j]) / np.sqrt(sum(np.power(testx[ii, j], 2) for ii in range(m)))
 E = np.zeros(n)
 Wd = np.zeros(n)
 for j in range(n):  #各指标熵值计算
@@ -192,7 +193,7 @@ for i in range(data_dim):
 
 figname = '折线图例' + str(data_dim + 1)
 fig = plt.figure(figname)
-figtitle = '低碳发展状况'
+figtitle = '碳电协同综合评价'
 fig.suptitle(figtitle)
 plt.rcParams['font.sans-serif'] = ['SimHei']  # 防止中文乱码
 x_axis_data = casename
@@ -203,7 +204,27 @@ plt.xticks(rotation=70, fontsize=8)     #将坐标轴x旋转90°以避免重叠
 plt.ylabel('指标')
 #plt.yticks(visible=False)       #隐藏y轴数值，因为用不到
 plt.legend(loc='best')
-savefig_name = 'result/折线图' + str(data_dim + 1) + '_低碳发展状况.png'
+savefig_name = 'result/折线图' + str(data_dim + 1) + '_碳电协同综合评价.png'
 plt.savefig(savefig_name, dpi=img_dpi, bbox_inches='tight')
 print('result has been saved!')
+
+#将结果以表格输出
+result_xls = xlwt.Workbook()
+sheet1 = result_xls.add_sheet('加权规范化决策矩阵', cell_overwrite_ok=True)
+sheet2 = result_xls.add_sheet('综合决策矩阵', cell_overwrite_ok=True)
+[h, l] = newZ.shape
+for i in range(h):
+    for j in range(l):
+        sheet1.write(i, j, newZ[i, j])
+    sheet2.write(i, 0, C[i])
+result_xls.save('result/result.xls')
+#将结果以JSON格式输出
+outputZ = newZ.tolist()
+outputC = C.tolist()
+output_text = {'PartValue': outputZ,
+               'TotalValue': outputC}
+with open('result/output.json', 'w') as f3:
+    json.dump(output_text, f3)
+    f3.close()
+print('result array has been saved!')
 
